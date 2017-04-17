@@ -1,5 +1,5 @@
 function SacReview(varargin)
-
+% Eric Nicholas 2017 - UR
 global currparams xdat_degrees ydat_degrees timevec plotdegflag
 
 switch nargin
@@ -71,6 +71,10 @@ switch nargin
                 end
                 
                 trialstatus(h,:) = {trialorderlist trialidxlist ones(length(trialorderlist),1)};
+                
+                for i = 1:length(trialstatus{h,1})
+                    
+                end
                 
             end
             
