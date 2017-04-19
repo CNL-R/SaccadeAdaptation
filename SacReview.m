@@ -74,6 +74,16 @@ switch nargin
                 
                 for i = 1:length(trialstatus{h,1})
                     
+                    for j = 1:length(data_eye(h).hdr.orig.esacc)
+                        
+                        temp_msg = strsplit(data_eye(h).hdr.orig.esacc{j});
+                        
+                        if str2double(temp_msg{3}) > data_eye(h).trial{1}(1,trialstatus{h,2}(i,1)) && str2double(temp_msg{3}) < data_eye(h).trial{1}(1,trialstatus{h,2}(i,2))
+                        
+                            trial_events{h,i,:} = {}; %needs temp array concatenation method, do when can think
+                            
+                        end
+                    end
                 end
                 
             end
