@@ -72,20 +72,17 @@ switch nargin
                 
                 trialstatus(h,:) = {trialorderlist trialidxlist ones(length(trialorderlist),1)};
                 
+                events = {};
                 for i = 1:length(trialstatus{h,1})
-                    
+                    event_data = {};
                     for j = 1:length(data_eye(h).hdr.orig.esacc)
-                        
                         temp_msg = strsplit(data_eye(h).hdr.orig.esacc{j});
-                        
                         if str2double(temp_msg{3}) > data_eye(h).trial{1}(1,trialstatus{h,2}(i,1)) && str2double(temp_msg{3}) < data_eye(h).trial{1}(1,trialstatus{h,2}(i,2))
-                        
-                            trial_events{h,i,:} = {}; %needs temp array concatenation method, do when can think
-                            
+                            event_data = vertcat(event_data,{temp_msg{3} temp_msg{4} temp_msg{5} temp_msg{6} temp_msg{7} temp_msg{8} temp_msg{9} temp_msg{10} temp_msg{11}});
                         end
                     end
-                end
-                
+                    events{h,i} = event_data;
+                end 
             end
             
             for i = 1:size(txtfiles,1)
