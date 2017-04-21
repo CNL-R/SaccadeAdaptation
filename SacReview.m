@@ -72,7 +72,7 @@ switch nargin
                 
                 trialstatus(h,:) = {trialorderlist trialidxlist ones(length(trialorderlist),1)};
                 
-                events = {};
+                
                 for i = 1:length(trialstatus{h,1})
                     event_data = {};
                     for j = 1:length(data_eye(h).hdr.orig.esacc)
@@ -119,16 +119,18 @@ scrsz = get(groot,'screensize');
 fig = figure('Position',[scrsz(3)/10 scrsz(4)/6 scrsz(3)/1.3 scrsz(4)/1.5],'MenuBar','none','Name','Saccade Artifact Rejection','NumberTitle','off','KeyPressFcn',@keypress);
 xdataxes = axes('Position',[.2 .6 .5 .25],'ylim',[-1280 1280]);
 ydataxes = axes('Position',[.2 .25 .5 .25],'ylim',[-540 540]);
-replayaxes = axes('Position',[.75 .5 .2 .25],'xlim',[-35 35],'ylim',[-35 35]);
+replayaxes = axes('Position',[.75 .25 .2 .25],'xlim',[-35 35],'ylim',[-35 35]);
 xlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.4 .85 .1 .035],'String','X Position Data','FontSize',14);
 ylabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.4 .5 .1 .035],'String','Y Position Data','FontSize',14);
+eventlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.8 .85 .1 .035],'String','Trial Events','FontSize',14);
 filebox = uicontrol('Parent',fig,'Units','Normalized','Style','listbox','Position',[.05 .55 .075 .3],'String',ascfiles,'callback',@whichfile);
+eventsbox = uicontrol('Parent',fig,'Units','Normalized','Style','listbox','Position',[.75 .55 .2 .3],'callback',@eventstate);
 currpathtxt = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .9 .45 .025],'String',['Data Directory:  ' datadir],'HorizontalAlignment','left');
 filetrials = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .45 .08 .1],'HorizontalAlignment','left');
 trialinfo = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .35 .1 .08],'HorizontalAlignment','left');
 paraminfo = uicontrol('Parent',fig','Units','Normalized','Style','text','Position',[.05 .25 .1 .08],'HorizontalAlignment','left');
 
-playbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Play Trial','Position',[.82 .4 .05 .05],'callback',@playtrial);
+playbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Play Trial','Position',[.82 .15 .05 .05],'callback',@playtrial);
 prevbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','<Prev Trial','Position',[.2 .155 .05 .03],'callback',@prevtrial);
 nextbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Next Trial>','Position',[.37 .155 .05 .03],'callback',@nextrial);
 acceptbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Accept Trial','Position',[.26 .15 .05 .04],'callback',@accept);
@@ -168,6 +170,7 @@ savereview
             ['nAdaptation:  ' num2str(length(find(trialstatus{currfile,1}==7)))]});
         set(trialinfo,'String',{['Current trial: ' num2str(currtrial)];['Trial type: ' typestrings{trialstatus{currfile,1}(currtrial)}];...
             ['Trial status: ' statusstrings{trialstatus{currfile,3}(currtrial)}];['Unreviewed Trials: ' num2str(length(find(trialstatus{currfile,3} == 1)))]});
+        set(eventsbox,'String',events{currfile,currtrial});
     end
 
     function prevtrial(~,~)
@@ -319,7 +322,7 @@ savereview
 
     function savereview(~,~)
         filename = 'Sacade_review.mat';
-        save(fullfile(datadir,filename),'data_eye','trialstatus','params','ascfiles','txtfiles');
+        save(fullfile(datadir,filename),'data_eye','trialstatus','params','events','ascfiles','txtfiles');
     end
 
     function dataout(~,~)
