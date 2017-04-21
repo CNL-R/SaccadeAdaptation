@@ -124,7 +124,7 @@ xlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[
 ylabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.4 .5 .1 .035],'String','Y Position Data','FontSize',14);
 eventlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.8 .85 .1 .035],'String','Trial Events','FontSize',14);
 filebox = uicontrol('Parent',fig,'Units','Normalized','Style','listbox','Position',[.05 .55 .075 .3],'String',ascfiles,'callback',@whichfile);
-eventsbox = uicontrol('Parent',fig,'Units','Normalized','Style','listbox','Position',[.75 .55 .2 .3],'callback',@eventstate);
+eventsbox = uitable('Data',[],'Parent',fig,'Units','Normalized','Position',[.75 .55 .2 .3],'ColumnName',{'Dur'; 's_x'; 's_y'; 'e_x'; 'e_y'; 'amp'; 'p_v'});
 currpathtxt = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .9 .45 .025],'String',['Data Directory:  ' datadir],'HorizontalAlignment','left');
 filetrials = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .45 .08 .1],'HorizontalAlignment','left');
 trialinfo = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .35 .1 .08],'HorizontalAlignment','left');
@@ -170,7 +170,7 @@ savereview
             ['nAdaptation:  ' num2str(length(find(trialstatus{currfile,1}==7)))]});
         set(trialinfo,'String',{['Current trial: ' num2str(currtrial)];['Trial type: ' typestrings{trialstatus{currfile,1}(currtrial)}];...
             ['Trial status: ' statusstrings{trialstatus{currfile,3}(currtrial)}];['Unreviewed Trials: ' num2str(length(find(trialstatus{currfile,3} == 1)))]});
-        set(eventsbox,'String',events{currfile,currtrial});
+        set(eventsbox,'Data',events{currfile,currtrial}(:,3:end));
     end
 
     function prevtrial(~,~)
