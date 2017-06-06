@@ -1,6 +1,6 @@
 function SacReview(varargin)
 % Eric Nicholas 2017 - UR
-global currparams xdat_degrees ydat_degrees timevec plotdegflag
+global currparams xdat_degrees ydat_degrees timevec plotdegflag selectedcell
 
 switch nargin
     case 0
@@ -78,11 +78,23 @@ switch nargin
                     for j = 1:length(data_eye(h).hdr.orig.esacc)
                         temp_msg = strsplit(data_eye(h).hdr.orig.esacc{j});
                         if str2double(temp_msg{3}) > data_eye(h).trial{1}(1,trialstatus{h,2}(i,1)) && str2double(temp_msg{3}) < data_eye(h).trial{1}(1,trialstatus{h,2}(i,2))
-                            event_data = vertcat(event_data,{temp_msg{3} temp_msg{4} temp_msg{5} temp_msg{6} temp_msg{7} temp_msg{8} temp_msg{9} temp_msg{10} temp_msg{11}});
+
+                            %calculate index values of individual events here
+                            k = 1;
+                            idx1 = find(data_eye(h).trial{1}(1,:)==str2double(temp_msg{3}));
+                            idx2 = find(data_eye(h).trial{1}(1,:)==str2double(temp_msg{4}));
+                            if isempty(idx1)
+                                idx1 = find(data_eye(h).trial{1}(1,:)==temp_msg{3}+1);
+                            end
+                            while isempty(idx2)
+                                idx2 = find(data_eye(h).trial{1}(1,:)==temp_msg{4}-k);
+                                k = k + 1;
+                            end
+                            event_data = vertcat(event_data,{idx1 idx2 false temp_msg{5} temp_msg{6} temp_msg{7} temp_msg{8} temp_msg{9} temp_msg{10} temp_msg{11}});
                         end
                     end
                     events{h,i} = event_data;
-                end 
+                end
             end
             
             for i = 1:size(txtfiles,1)
@@ -114,6 +126,7 @@ typestrings = {'ControlR' 'ControlL' 'OrthogonalU' 'OrthogonalD' 'Probe+' 'Probe
 statusstrings = {'Unreviewed' 'Accepted' 'Rejected'};
 targetpos = [];
 plotdegflag = 1;
+selectedcell = 1;
 
 scrsz = get(groot,'screensize');
 fig = figure('Position',[scrsz(3)/10 scrsz(4)/6 scrsz(3)/1.3 scrsz(4)/1.5],'MenuBar','none','Name','Saccade Artifact Rejection','NumberTitle','off','KeyPressFcn',@keypress);
@@ -124,7 +137,8 @@ xlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[
 ylabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.4 .5 .1 .035],'String','Y Position Data','FontSize',14);
 eventlabel = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.8 .85 .1 .035],'String','Trial Events','FontSize',14);
 filebox = uicontrol('Parent',fig,'Units','Normalized','Style','listbox','Position',[.05 .55 .075 .3],'String',ascfiles,'callback',@whichfile);
-eventsbox = uitable('Data',[],'Parent',fig,'Units','Normalized','Position',[.75 .55 .2 .3],'ColumnName',{'Dur'; 's_x'; 's_y'; 'e_x'; 'e_y'; 'amp'; 'p_v'});
+eventsbox = uitable('Data',[],'Parent',fig,'Units','Normalized','Position',[.75 .55 .2 .3],'ColumnName',{'Sav?'; 'Dur'; 's_x'; 's_y'; 'e_x'; 'e_y'; 'amp'; 'p_v'},...
+    'ColumnEditable',[true false false false false false false false],'CellEditCallback',@eventflag,'CellSelectionCallback',@showevent);
 currpathtxt = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .9 .45 .025],'String',['Data Directory:  ' datadir],'HorizontalAlignment','left');
 filetrials = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .45 .08 .1],'HorizontalAlignment','left');
 trialinfo = uicontrol('Parent',fig,'Units','Normalized','Style','text','Position',[.05 .35 .1 .08],'HorizontalAlignment','left');
@@ -133,10 +147,11 @@ paraminfo = uicontrol('Parent',fig','Units','Normalized','Style','text','Positio
 playbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Play Trial','Position',[.82 .15 .05 .05],'callback',@playtrial);
 prevbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','<Prev Trial','Position',[.2 .155 .05 .03],'callback',@prevtrial);
 nextbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Next Trial>','Position',[.37 .155 .05 .03],'callback',@nextrial);
-acceptbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Accept Trial','Position',[.26 .15 .05 .04],'callback',@accept);
-rejectbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Reject Trial','Position',[.31 .15 .05 .04],'callback',@reject);
+acceptbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Accept Trial','Position',[.26 .15 .05 .04],'callback',@accept,'Enable','off');
+rejectbutton = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Reject Trial','Position',[.31 .15 .05 .04],'callback',@reject,'Enable','off');
 saverevbut = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Save Review State','Position',[.45 .15 .075 .05],'callback',@savereview);
-outbutt = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Create Data Struct','Position',[.55 .15 .075 .05],'callback',@dataout);
+outbutt = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Create Data Struct','Position',[.55 .15 .075 .05],'callback',@dataout,'Enable','off');
+evtbutt = uicontrol('Parent',fig,'Units','Normalized','Style','pushbutton','String','Output Selected Events','Position',[.8 .9 .09 .05],'callback',@eventsout);
 plotdegcheck = uicontrol('Parent',fig,'Units','Normalized','Style','checkbox','Position',[.2 .1 .05 .03],'callback',@plotdegrees,'Value',1);
 plotdegtxt = uicontrol('Parent',fig','Units','Normalized','Style','text','Position',[.21 .1 .1 .025],'HorizontalAlignment','left','String','Plot data in Degrees');
 
@@ -157,7 +172,6 @@ savereview
             set(paraminfo,'String',{['Target1 dist: ' num2str(targetpos(7)) ' degrees']; ['Target2 dist: ' num2str(targetpos(8)) ' degrees']; ['AdaptDir: ' num2str(currparams(7)) '  (1 = R, -1 = L)'];...
                 ['Orthogonal dist: ' num2str(targetpos(4)) ' degrees']});
         end
-        
         updateinfo
         plottrial
     end
@@ -215,6 +229,17 @@ savereview
         nextrial
     end
 
+    function eventflag(~,evt)
+        events{currfile,currtrial}{evt.Indices(1),3} = evt.NewData;
+    end
+
+    function showevent(~,evt)
+        if ~isempty(evt.Indices)
+            selectedcell = evt.Indices(1);
+        end
+        plottrial
+    end
+
     function plotdegrees(hobj,~)
         if (get(hobj,'Value') == get(hobj,'Max'))
             plotdegflag = 1;
@@ -256,9 +281,17 @@ savereview
     end
 
     function plottrial
+        trial_start_idx = trialstatus{currfile,2}(currtrial,1);
+        event_delta_idx = events{currfile,currtrial}{selectedcell,1} - trialstatus{currfile,2}(currtrial,1);
+        
+        xevt_dat = rad2deg(atan((((data_eye(currfile).trial{1}(2,events{currfile,currtrial}{selectedcell,1}:events{currfile,currtrial}{selectedcell,2})-xoffset).*currparams(2))./currparams(1))));
+        xevt_tvec = 1/data_eye(1).hdr.Fs*event_delta_idx:1/data_eye(1).hdr.Fs:1/data_eye(1).hdr.Fs*(event_delta_idx+events{currfile,currtrial}{selectedcell,2}-events{currfile,currtrial}{selectedcell,1});
+        
+        yevt_dat = [];
         
         xdat_degrees = rad2deg(atan((((data_eye(currfile).trial{1}(2,trialstatus{currfile,2}(currtrial,1):trialstatus{currfile,2}(currtrial,2))-xoffset).*currparams(2))./currparams(1))));
         ydat_degrees = rad2deg(atan((((data_eye(currfile).trial{1}(3,trialstatus{currfile,2}(currtrial,1):trialstatus{currfile,2}(currtrial,2))-yoffset).*currparams(2))./currparams(1))));
+        
         timevec = 0:1/data_eye(1).hdr.Fs:1/data_eye(1).hdr.Fs*(length(data_eye(currfile).trial{1}(2,trialstatus{currfile,2}(currtrial,1):trialstatus{currfile,2}(currtrial,2)))-1);
         
         if trialstatus{currfile,1}(currtrial) == 1 || trialstatus{currfile,1}(currtrial) == 2
@@ -299,6 +332,7 @@ savereview
         
         if plotdegflag == 1
             plot(xdataxes,timevec,xdat_degrees);
+            plot(xdataxes,xevt_tvec,xevt_dat,'r');
             set(xdataxes,'ylim',[-35 35]);
             
             plot(ydataxes,timevec,ydat_degrees);
@@ -343,12 +377,29 @@ savereview
                     dataout(length(dataout)).pixdata(1,:) = data_eye(p).trial{1}(2,trialstatus{p,2}(keepers(m),1):trialstatus{p,2}(keepers(m),2))-xoffset;
                     dataout(length(dataout)).pixdata(2,:) = data_eye(p).trial{1}(2,trialstatus{p,2}(keepers(m),1):trialstatus{p,2}(keepers(m),2))-xoffset;
                     dataout(length(dataout)).degdata(1,:) = rad2deg(atan((((data_eye(p).trial{1}(2,trialstatus{p,2}(keepers(m),1):trialstatus{p,2}(keepers(m),2))-xoffset).*params(p,2))./params(p,1))));
-                    dataout(length(dataout)).degdata(2,:) = rad2deg(atan((((data_eye(p).trial{1}(3,trialstatus{p,2}(keepers(m),1):trialstatus{p,2}(keepers(m),2))-yoffset).*params(p,2))./params(p,1))));                    
+                    dataout(length(dataout)).degdata(2,:) = rad2deg(atan((((data_eye(p).trial{1}(3,trialstatus{p,2}(keepers(m),1):trialstatus{p,2}(keepers(m),2))-yoffset).*params(p,2))./params(p,1))));
                 end
             end
             clear keepers
         end
         assignin('base', 'dataout', dataout);
+    end
+
+    function eventsout(~,~)
+        evtout = [];
+        for p = 1:size(events,1)
+            for q = 1:size(events,2)
+                for r = 1:size(events{p,q},1)
+                    if events{p,q}{r,3}
+                        tmp = [trialstatus{p,1}(q) str2double(events{p,q}{r,4})];
+                        evtout = vertcat(evtout, tmp);
+                    end
+                end
+            end
+        end
+        assignin('base', 'eventout', evtout);
+        fname = [char(inputdlg('Filename')) '.csv'];
+        csvwrite(fname,evtout)
     end
 
 end
