@@ -391,7 +391,7 @@ savereview
             for q = 1:size(events,2)
                 for r = 1:size(events{p,q},1)
                     if events{p,q}{r,3}
-                        tmp = [trialstatus{p,1}(q) str2double(events{p,q}{r,4})];
+                        tmp = [trialstatus{p,1}(q) q str2double(events{p,q}{r,9}) str2double(events{p,q}{r,4}) str2double(events{p,q}{r,10})];
                         evtout = vertcat(evtout, tmp);
                     end
                 end
